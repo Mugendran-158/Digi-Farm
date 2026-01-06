@@ -55,7 +55,13 @@ from sqlalchemy.exc import IntegrityError
 import datetime
 
 # Configure Database (SQLite for local, easily switchable to others)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///farmer_twin.db'
+# Database configuration
+database_url = os.getenv('DATABASE_URL') or os.getenv('RAILWAY_DATABASE_URL')
+if database_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # Fallback to SQLite for development
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///farmer_twin.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
@@ -242,6 +248,15 @@ Use simple, clear English without technical jargon. Use short sentences that far
     }
     
     return base_prompt + language_instructions.get(language, language_instructions["en"])
+
+# --- HEALTH CHECK ---
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.datetime.utcnow().isoformat(),
+        'service': 'Digital Farmer Twin API'
+    })
 
 # --- AUTH ROUTES ---
 
@@ -932,5 +947,14 @@ def get_vapid_key():
 from flask import Response
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True) # Ensure threaded for SSE
+    # Production configuration
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=debug,
+        threaded=True
+    )
 
