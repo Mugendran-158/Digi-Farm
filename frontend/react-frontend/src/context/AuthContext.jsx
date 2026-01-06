@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import config from '../config';
 
 const AuthContext = createContext();
 
@@ -11,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     // Initialize axios defaults
-    axios.defaults.baseURL = 'http://localhost:5000';
+    axios.defaults.baseURL = config.API_BASE_URL;
 
     useEffect(() => {
         checkUserLoggedIn();
